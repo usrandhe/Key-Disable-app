@@ -28,7 +28,7 @@ class KeyBlockerApp(tk.Tk):
 
         # Grid (Treeview) to display disabled keys
         columns = ("#", "Key", "Status")
-        self.table = ttk.Treeview(self, columns=columns, show="headings", height=9)
+        self.table = ttk.Treeview(self, columns=columns, show="headings", height=9, style="Custom.Treeview")
         self.table.heading("#", text="#")
         self.table.heading("Key", text="Key")
         self.table.heading("Status", text="Status")
@@ -37,17 +37,23 @@ class KeyBlockerApp(tk.Tk):
         self.table.column("Status", width=140, anchor="center")
         self.table.pack(pady=15, fill="x", padx=12)
 
-        # Enable button for selected key
-        #ttk.Button(self, text="Enable Selected Key", command=self.enable_selected_key).pack(pady=4)
-      
+        # Add border to Treeview and rows
+        style = ttk.Style(self)
+        style.configure("Custom.Treeview", 
+                        rowheight=24, 
+                        font=("Segoe UI", 10))
+        style.configure("Custom.Treeview.Heading", font=("Segoe UI", 10, "bold"), borderwidth=2, relief="solid")
+        style.map("Custom.Treeview", background=[('selected', "#45A3EF")])
+        style.layout("Custom.Treeview", [
+            ('Treeview.treearea', {'sticky': 'nswe'}),
+            ('Treeview.border', {'sticky': 'nswe'})
+        ])
 
+        # You can still use tags for row color, but not border
+        self.table.tag_configure('highlight', background="#f0f0f0")
 
         self.status_lbl = tk.Label(self, text="", fg="blue")
         self.status_lbl.pack(pady=(0, 10))
-
-        style = ttk.Style(self)
-        style.configure("Treeview", rowheight=24, font=("Segoe UI", 10))
-        style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
 
     def disable_key(self):
         key = self.key_entry.get().strip().lower()
@@ -82,9 +88,11 @@ class KeyBlockerApp(tk.Tk):
 
     def _refresh_table(self):
         self.table.delete(*self.table.get_children())
-        for idx, (key, status) in enumerate(self.disabled_keys.items(), start=1):
+        idx = 1
+        for key, status in self.disabled_keys.items():
             if status:
-                self.table.insert("", "end", values=(idx, key, "Disabled"))
+                self.table.insert("", "end", values=(idx, key, "Disabled"), tags=('bordered',))
+                idx += 1
 
     def _tk_blocker(self, event):
         """Block keys even inside Tkinter UI"""
